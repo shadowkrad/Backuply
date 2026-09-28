@@ -304,8 +304,14 @@ export default function BackuplyDashboard() {
                     <span className="text-slate-200 font-mono">{t.lastBackupSize || "—"}</span>
                   </div>
                   <div className="flex justify-between text-slate-400">
-                    <span>Snapshot Archiviati:</span>
-                    <span className="text-emerald-400 font-semibold">{t.totalSnapshots} copie</span>
+                    <span>Copie su QNAP:</span>
+                    <span className="text-emerald-400 font-semibold">
+                      {snapshots.filter((s) => s.target === t.subdomain).length} copie
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-slate-500 text-[11px] pt-1">
+                    <span>Storico su VPS Cloud:</span>
+                    <span>{t.totalSnapshots} copie</span>
                   </div>
                 </div>
               </div>
