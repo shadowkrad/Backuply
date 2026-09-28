@@ -44,7 +44,7 @@ export function getLocalSnapshots(): BackupSnapshot[] {
   const snapshots: BackupSnapshot[] = [];
 
   for (const file of files) {
-    if (!file.endsWith(".db.gz") && !file.endsWith(".db") && !file.endsWith(".tar.gz")) continue;
+    if (!file.endsWith(".db.gz") && !file.endsWith(".db") && !file.endsWith(".tar.gz") && !file.endsWith(".sql.gz") && !file.endsWith(".sql")) continue;
 
     const fullPath = path.join(dir, file);
     const stats = fs.statSync(fullPath);
