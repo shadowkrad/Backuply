@@ -17,6 +17,6 @@ services:
     volumes:
       # Dati applicativi e impostazioni di Backuply
       - ./data:/app/data
-      # Cartella condivisa sul NAS QNAP per archivio immutabile
-      # (Modifica il percorso host se la tua cartella QNAP è es. /share/CACHEDEV1_DATA/Backups/Taaaac)
-      - /share/Backups/Taaaac:/backups
+      # Cartella archivio immutabile backup: di default cartella locale ./backups, 
+      # oppure mount point dello storage pool QNAP (es. /mnt/backups o /share/Backups)
+      - ./backups:/backups

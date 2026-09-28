@@ -17,50 +17,32 @@ Sviluppato per girare direttamente sul tuo **NAS QNAP (Container Station)** all'
 
 ---
 
-## 🚀 Installazione su NAS QNAP (Container Station)
+## 🚀 Installazione su Server Debian / Docker Host (Consigliato)
 
-### Passo 1: Crea la cartella dei backup sul QNAP
-Apri **File Station** sul tuo QNAP e crea una cartella condivisa (oppure una sottocartella in una cartella esistente), ad esempio:  
-`/share/Backups/Taaaac`  
-*(Se il tuo volume principale è CACHEDEV1, il percorso assoluto sarà `/share/CACHEDEV1_DATA/Backups/Taaaac`)*.
+Se sul tuo QNAP o nella tua rete hai una VM / container **Debian** con Docker installato, l'avvio richiede letteralmente **30 secondi**:
 
-### Passo 2: Avvia Backuply in Container Station
-1. Apri **Container Station** sul QNAP.
-2. Vai su **Applicazioni** (Applications) -> **Crea** (Create).
-3. Assegna il nome dell'applicazione: `backuply`.
-4. Incolla il seguente contenuto `docker-compose.yml`:
+```bash
+# 1. Clona il repository nella tua cartella preferita (es. /opt/backuply o ~/backuply)
+git clone https://github.com/shadowkrad/Backuply.git /opt/backuply
+cd /opt/backuply
 
-```yaml
-version: "3.8"
+# 2. Avvia il container in background (compila automaticamente l'immagine)
+docker compose up -d --build
 
-services:
-  backuply:
-    image: node:22-alpine
-    container_name: backuply
-    restart: unless-stopped
-    working_dir: /app
-    ports:
-      - "3005:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - TAAAAC_CORE_URL=https://taaaac.eu
-      - BACKUPLY_SECRET_TOKEN=taaaac-backuply-secure-token
-      - BACKUPLY_STORAGE_PATH=/backups
-    volumes:
-      - /share/Container/backuply/data:/app/data
-      - /share/Backups/Taaaac:/backups
-    command: >
-      sh -c "npm install -g npm@latest && 
-             git clone https://github.com/shadowkrad/Backuply.git /app_src && 
-             cd /app_src && npm ci && npm run build && 
-             cp -r /app_src/.next/standalone/* /app/ && 
-             cp -r /app_src/.next/static /app/.next/static && 
-             cp -r /app_src/public /app/public && 
-             cd /app && node server.js"
+# 3. Controlla che i log siano attivi
+docker compose logs -f
 ```
 
-*Oppure compila direttamente il Dockerfile tramite git / Container Station.*
+La cartella `./backups` all'interno di `/opt/backuply/backups` conterrà tutti i file compressi `.db.gz`.  
+*(Se la tua VM Debian ha un mount NFS o SMB verso lo storage del QNAP, puoi mappare ad es. `/mnt/qnap/backups:/backups` nel `docker-compose.yml`)*.
+
+---
+
+### Alternativa: Avvio tramite QNAP Container Station GUI
+Se preferisci usare l'interfaccia grafica di Container Station:
+1. Apri **Container Station** -> **Applicazioni** -> **Crea**.
+2. Incolla il contenuto di `docker-compose.yml`.
+3. Clicca su **Crea**.
 
 ### Passo 3: Accedi alla Web UI
 Apri il tuo browser all'indirizzo del NAS:  
