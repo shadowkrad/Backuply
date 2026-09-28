@@ -61,10 +61,11 @@ export function getLocalSnapshots(): BackupSnapshot[] {
       if (match && match[1]) {
         target = match[1];
         if (target.includes("littlecreations") || target.includes("vendoly")) moduleType = "vendoly";
-        else if (target.includes("schedly") || target.includes("beauty")) moduleType = "schedly";
+        else if (target.includes("schedly") || target.includes("beauty") || target.includes("estetica") || target.includes("bf")) moduleType = "schedly";
         else if (target.includes("barber")) moduleType = "barberly";
         else if (target.includes("tavoly") || target.includes("ristorante")) moduleType = "tavoly";
         else if (target.includes("taskly") || target.includes("manutenzioni")) moduleType = "taskly";
+        else moduleType = "schedly";
       }
     }
 
