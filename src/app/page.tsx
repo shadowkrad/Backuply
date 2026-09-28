@@ -210,7 +210,7 @@ export default function BackuplyDashboard() {
 
       {/* Griglia KPI & Statistiche */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl border border-slate-800 bg-[#0d1424]/60 backdrop-blur-sm relative overflow-hidden">
+        <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between text-slate-400 mb-3">
             <span className="text-xs font-medium uppercase tracking-wider">Archivio QNAP</span>
             <HardDrive className="w-4 h-4 text-emerald-400" />
@@ -221,7 +221,7 @@ export default function BackuplyDashboard() {
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl border border-slate-800 bg-[#0d1424]/60 backdrop-blur-sm relative overflow-hidden">
+        <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between text-slate-400 mb-3">
             <span className="text-xs font-medium uppercase tracking-wider">Snapshot Immutabili</span>
             <Lock className="w-4 h-4 text-blue-400" />
@@ -232,7 +232,7 @@ export default function BackuplyDashboard() {
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl border border-slate-800 bg-[#0d1424]/60 backdrop-blur-sm relative overflow-hidden">
+        <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between text-slate-400 mb-3">
             <span className="text-xs font-medium uppercase tracking-wider">Istanze Protette</span>
             <Server className="w-4 h-4 text-purple-400" />
@@ -241,7 +241,7 @@ export default function BackuplyDashboard() {
           <p className="text-xs text-slate-400 mt-1">Core + Micro-Tenant Isolati</p>
         </div>
 
-        <div className="p-5 rounded-2xl border border-slate-800 bg-[#0d1424]/60 backdrop-blur-sm relative overflow-hidden">
+        <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between text-slate-400 mb-3">
             <span className="text-xs font-medium uppercase tracking-wider">Canale di Backup</span>
             <CloudLightning className="w-4 h-4 text-amber-400" />
@@ -277,7 +277,7 @@ export default function BackuplyDashboard() {
           {tenants.map((t) => (
             <div
               key={t.id}
-              className="p-5 rounded-2xl border border-slate-800/90 bg-[#0d1424]/40 hover:bg-[#0d1424]/80 transition-all flex flex-col justify-between space-y-4"
+              className="p-5 rounded-2xl border border-slate-800 bg-slate-900 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4 shadow-sm"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
@@ -338,7 +338,7 @@ export default function BackuplyDashboard() {
           </span>
         </div>
 
-        <div className="border border-slate-800 rounded-2xl bg-[#0d1424]/40 overflow-hidden shadow-xl">
+        <div className="border border-slate-800 rounded-2xl bg-slate-900 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-900/80 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800 font-medium">
