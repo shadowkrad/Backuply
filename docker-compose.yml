@@ -1,0 +1,22 @@
+services:
+  backuply:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: shadowkrad/backuply:latest
+    container_name: backuply
+    restart: unless-stopped
+    ports:
+      - "3005:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - TAAAAC_CORE_URL=https://taaaac.eu
+      - BACKUPLY_SECRET_TOKEN=taaaac-backuply-secure-token
+      - BACKUPLY_STORAGE_PATH=/backups
+    volumes:
+      # Dati applicativi e impostazioni di Backuply
+      - ./data:/app/data
+      # Cartella condivisa sul NAS QNAP per archivio immutabile
+      # (Modifica il percorso host se la tua cartella QNAP è es. /share/CACHEDEV1_DATA/Backups/Taaaac)
+      - /share/Backups/Taaaac:/backups
