@@ -11,6 +11,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - TZ=Europe/Rome
       - TAAAAC_CORE_URL=https://taaaac.eu
       - BACKUPLY_SECRET_TOKEN=taaaac-backuply-secure-token
       - BACKUPLY_STORAGE_PATH=/backups

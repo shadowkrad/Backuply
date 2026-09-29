@@ -31,11 +31,17 @@ export interface BackuplySettings {
   taaaacCoreUrl: string;
   backupSecretToken: string;
   qnapStoragePath: string;
+  autoBackupEnabled: boolean;
+  autoBackupTime: string; // es. '03:00'
   cronSchedule: string; // es. '0 3 * * *'
   retentionDays: number; // es. 30
   telegramAlertsEnabled: boolean;
   telegramBotToken?: string;
   telegramChatId?: string;
+  telegramNotifyOnSuccess: boolean;
+  lastBackupRunAt?: string;
+  lastBackupStatus?: "SUCCESS" | "ERROR" | "IDLE";
+  lastBackupMessage?: string;
 }
 
 export interface SyncResult {

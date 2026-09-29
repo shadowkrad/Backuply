@@ -52,11 +52,13 @@ Apri il tuo browser all'indirizzo del NAS:
 
 ## 💻 Interfaccia Web e Funzionalità
 
-- **Dashboard KPI:** visualizza lo spazio disco totale consumato su QNAP, il conteggio degli snapshot immutabili e lo stato della connessione HTTPS a Taaaac Cloud.
-- **Istanze Cloud Monitorate:** schede per *Taaaac Core Platform*, *Little Creations Family (Vendoly)* e tutti gli altri tenant registrati con data dell'ultimo backup e dimensione.
-- **Esegui Snapshot Globale:** un click per richiedere la generazione e il download atomico di tutti i database.
+- **Dashboard KPI & Status Bar:** visualizza lo spazio disco totale consumato su QNAP, il conteggio degli snapshot immutabili, lo stato del backup automatico notturno e delle notifiche Telegram.
+- **Schedulatore Automatico Notturno Integrato:** motore interno in background per l'esecuzione automatica del backup ogni notte all'orario desiderato (es. ore `03:00` programmabile con flag On/Off e time picker).
+- **Gestore Notifiche Telegram:** invio automatico su canale o chat privata dell'esito dettagliato (positivo 🟢 o negativo 🔴) di ogni backup, con volume scaricato, snapshot archiviati, SHA-256 e pulsante di test immediato integrato.
+- **Istanze Cloud Monitorate:** schede per *Taaaac Core Platform*, *Little Creations Family (Vendoly)*, *BF Estetica (Schedly)* e tutti gli altri tenant registrati con data dell'ultimo backup e dimensione.
+- **Esegui Snapshot Globale:** un click per richiedere la generazione e il download atomico manuale di tutti i database.
 - **Caveau Immutabile:** tabella completa con SHA-256 hash, badge WORM, download diretto via browser e guida al ripristino (Disaster Recovery).
-- **Impostazioni Personalizzabili:** modifica al volo URL VPS, token segreto, percorso su QNAP e retention dei file.
+- **Impostazioni Personalizzabili & Retention:** modifica al volo URL VPS, token segreto, percorso su QNAP, retention automatica (es. 30 giorni) e credenziali bot Telegram.
 
 ---
 

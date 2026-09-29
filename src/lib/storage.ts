@@ -90,11 +90,52 @@ export function getLocalSnapshots(): BackupSnapshot[] {
   return snapshots.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
+export function pruneOldSnapshots(retentionDays: number): { prunedCount: number; freedBytes: number } {
+  if (!retentionDays || retentionDays <= 0) return { prunedCount: 0, freedBytes: 0 };
+  const dir = getBackupsDirectory();
+  if (!fs.existsSync(dir)) return { prunedCount: 0, freedBytes: 0 };
+
+  const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
+  const files = fs.readdirSync(dir);
+  let prunedCount = 0;
+  let freedBytes = 0;
+
+  for (const file of files) {
+    if (!file.endsWith(".db.gz") && !file.endsWith(".db") && !file.endsWith(".tar.gz") && !file.endsWith(".sql.gz") && !file.endsWith(".sql")) continue;
+    const fullPath = path.join(dir, file);
+    try {
+      const stats = fs.statSync(fullPath);
+      if (stats.mtimeMs < cutoff) {
+        freedBytes += stats.size;
+        fs.unlinkSync(fullPath);
+        prunedCount++;
+      }
+    } catch {}
+  }
+  return { prunedCount, freedBytes };
+}
+
 export function getSettings(): BackuplySettings {
   try {
     if (fs.existsSync(DEFAULT_SETTINGS_FILE)) {
       const raw = fs.readFileSync(DEFAULT_SETTINGS_FILE, "utf8");
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return {
+        taaaacCoreUrl: parsed.taaaacCoreUrl || process.env.TAAAAC_CORE_URL || "https://taaaac.eu",
+        backupSecretToken: parsed.backupSecretToken || process.env.BACKUPLY_SECRET_TOKEN || "taaaac-backuply-secure-token",
+        qnapStoragePath: parsed.qnapStoragePath || getBackupsDirectory(),
+        autoBackupEnabled: parsed.autoBackupEnabled !== undefined ? parsed.autoBackupEnabled : true,
+        autoBackupTime: parsed.autoBackupTime || "03:00",
+        cronSchedule: parsed.cronSchedule || "0 3 * * *",
+        retentionDays: parsed.retentionDays || 30,
+        telegramAlertsEnabled: Boolean(parsed.telegramAlertsEnabled),
+        telegramBotToken: parsed.telegramBotToken || "",
+        telegramChatId: parsed.telegramChatId || "",
+        telegramNotifyOnSuccess: parsed.telegramNotifyOnSuccess !== undefined ? parsed.telegramNotifyOnSuccess : true,
+        lastBackupRunAt: parsed.lastBackupRunAt,
+        lastBackupStatus: parsed.lastBackupStatus || "IDLE",
+        lastBackupMessage: parsed.lastBackupMessage,
+      };
     }
   } catch {}
 
@@ -102,9 +143,15 @@ export function getSettings(): BackuplySettings {
     taaaacCoreUrl: process.env.TAAAAC_CORE_URL || "https://taaaac.eu",
     backupSecretToken: process.env.BACKUPLY_SECRET_TOKEN || "taaaac-backuply-secure-token",
     qnapStoragePath: getBackupsDirectory(),
+    autoBackupEnabled: true,
+    autoBackupTime: "03:00",
     cronSchedule: "0 3 * * *", // Ogni notte alle ore 03:00
     retentionDays: 30, // 30 giorni di snapshot immutabili
     telegramAlertsEnabled: false,
+    telegramBotToken: "",
+    telegramChatId: "",
+    telegramNotifyOnSuccess: true,
+    lastBackupStatus: "IDLE",
   };
 }
 
