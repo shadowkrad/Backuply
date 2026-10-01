@@ -15,6 +15,9 @@ services:
       - TAAAAC_CORE_URL=https://taaaac.eu
       - BACKUPLY_SECRET_TOKEN=taaaac-backuply-secure-token
       - BACKUPLY_STORAGE_PATH=/backups
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - TELEGRAM_ALERTS_ENABLED=${TELEGRAM_ALERTS_ENABLED:-true}
     volumes:
       # Dati applicativi e impostazioni di Backuply
       - ./data:/app/data

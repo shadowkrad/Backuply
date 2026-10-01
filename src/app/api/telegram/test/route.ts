@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { testTelegramConnection } from "@/lib/telegram";
+import { getSettings } from "@/lib/storage";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { botToken, chatId } = body;
+    const settings = getSettings();
+    const botToken = body.botToken || settings.telegramBotToken;
+    const chatId = body.chatId || settings.telegramChatId;
 
     if (!botToken || !chatId) {
       return NextResponse.json(

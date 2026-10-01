@@ -128,9 +128,11 @@ export function getSettings(): BackuplySettings {
         autoBackupTime: parsed.autoBackupTime || "03:00",
         cronSchedule: parsed.cronSchedule || "0 3 * * *",
         retentionDays: parsed.retentionDays || 30,
-        telegramAlertsEnabled: Boolean(parsed.telegramAlertsEnabled),
-        telegramBotToken: parsed.telegramBotToken || "",
-        telegramChatId: parsed.telegramChatId || "",
+        telegramAlertsEnabled: parsed.telegramAlertsEnabled !== undefined 
+          ? Boolean(parsed.telegramAlertsEnabled) 
+          : (process.env.TELEGRAM_ALERTS_ENABLED !== "false" && Boolean(process.env.TELEGRAM_BOT_TOKEN)),
+        telegramBotToken: parsed.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || "",
+        telegramChatId: parsed.telegramChatId || process.env.TELEGRAM_CHAT_ID || "",
         telegramNotifyOnSuccess: parsed.telegramNotifyOnSuccess !== undefined ? parsed.telegramNotifyOnSuccess : true,
         lastBackupRunAt: parsed.lastBackupRunAt,
         lastBackupStatus: parsed.lastBackupStatus || "IDLE",
@@ -139,6 +141,7 @@ export function getSettings(): BackuplySettings {
     }
   } catch {}
 
+  const hasEnvTelegram = Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID);
   return {
     taaaacCoreUrl: process.env.TAAAAC_CORE_URL || "https://taaaac.eu",
     backupSecretToken: process.env.BACKUPLY_SECRET_TOKEN || "taaaac-backuply-secure-token",
@@ -147,9 +150,9 @@ export function getSettings(): BackuplySettings {
     autoBackupTime: "03:00",
     cronSchedule: "0 3 * * *", // Ogni notte alle ore 03:00
     retentionDays: 30, // 30 giorni di snapshot immutabili
-    telegramAlertsEnabled: false,
-    telegramBotToken: "",
-    telegramChatId: "",
+    telegramAlertsEnabled: hasEnvTelegram,
+    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || "",
+    telegramChatId: process.env.TELEGRAM_CHAT_ID || "",
     telegramNotifyOnSuccess: true,
     lastBackupStatus: "IDLE",
   };
