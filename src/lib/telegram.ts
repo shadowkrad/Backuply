@@ -73,6 +73,14 @@ export async function testTelegramConnection(
   return sendTelegramNotification(testMessage, { botToken, chatId });
 }
 
+function escapeHtml(str: string): string {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 export interface BackupTelegramReportParams {
   success: boolean;
   isAutomated?: boolean;
@@ -99,6 +107,7 @@ export function formatBackupTelegramReport(params: BackupTelegramReportParams): 
   } = params;
 
   const now = new Date().toLocaleString("it-IT", {
+    timeZone: "Europe/Rome",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -128,7 +137,7 @@ export function formatBackupTelegramReport(params: BackupTelegramReportParams): 
   if (downloadedFiles.length > 0) {
     msg += `\n📦 <b>File Archiviati su QNAP:</b>\n`;
     for (const f of downloadedFiles) {
-      msg += ` • <code>${f}</code>\n`;
+      msg += ` • <code>${escapeHtml(f)}</code>\n`;
     }
   }
 
@@ -139,7 +148,7 @@ export function formatBackupTelegramReport(params: BackupTelegramReportParams): 
   if (errors.length > 0) {
     msg += `\n⚠️ <b>Dettaglio Errori (${errors.length}):</b>\n`;
     for (const e of errors) {
-      msg += ` • ❌ <i>${e}</i>\n`;
+      msg += ` • ❌ <i>${escapeHtml(e)}</i>\n`;
     }
   }
 

@@ -70,27 +70,40 @@ export async function runBackupSync(options?: RunBackupSyncOptions): Promise<Syn
       lastBackupMessage: summaryMessage,
     });
 
-    // Notifica Telegram se abilitata
-    if (settings.telegramAlertsEnabled && settings.telegramBotToken && settings.telegramChatId) {
-      const shouldNotify = !isSuccess || settings.telegramNotifyOnSuccess !== false;
-      if (shouldNotify) {
-        const reportHtml = formatBackupTelegramReport({
-          success: isSuccess,
-          isAutomated,
-          downloadedCount: downloadedFiles.length,
-          totalBytes,
-          downloadedFiles,
-          errors,
-          durationMs,
-          prunedCount,
-          freedBytes,
-        });
+    // Notifica Telegram: invia sempre se token e chat id sono presenti
+    const hasTelegramConfig = Boolean(settings.telegramBotToken && settings.telegramChatId);
+    const isAlertsEnabled = settings.telegramAlertsEnabled !== false;
+    const shouldNotify = hasTelegramConfig && isAlertsEnabled && (!isSuccess || settings.telegramNotifyOnSuccess !== false);
 
-        // Invio asincrono senza bloccare il flusso
-        sendTelegramNotification(reportHtml).catch((tgErr) => {
-          console.error("[Backuply] Errore invio notifica Telegram:", tgErr);
+    if (shouldNotify) {
+      const reportHtml = formatBackupTelegramReport({
+        success: isSuccess,
+        isAutomated,
+        downloadedCount: downloadedFiles.length,
+        totalBytes,
+        downloadedFiles,
+        errors,
+        durationMs,
+        prunedCount,
+        freedBytes,
+      });
+
+      try {
+        console.log("[Backuply] 📱 Invio notifica Telegram in corso...");
+        const tgRes = await sendTelegramNotification(reportHtml, {
+          botToken: settings.telegramBotToken,
+          chatId: settings.telegramChatId,
         });
+        if (tgRes.ok) {
+          console.log("[Backuply] ✅ Notifica Telegram inviata con successo!");
+        } else {
+          console.error("[Backuply] ❌ Errore invio notifica Telegram:", tgRes.error);
+        }
+      } catch (tgErr: any) {
+        console.error("[Backuply] ❌ Eccezione durante invio Telegram:", tgErr.message || tgErr);
       }
+    } else {
+      console.log(`[Backuply] Notifica Telegram non inviata (hasConfig=${hasTelegramConfig}, isAlertsEnabled=${isAlertsEnabled}, shouldNotify=${shouldNotify})`);
     }
 
     return {
@@ -112,7 +125,10 @@ export async function runBackupSync(options?: RunBackupSyncOptions): Promise<Syn
       lastBackupMessage: errorMsg,
     });
 
-    if (settings.telegramAlertsEnabled && settings.telegramBotToken && settings.telegramChatId) {
+    const hasTelegramConfig = Boolean(settings.telegramBotToken && settings.telegramChatId);
+    const isAlertsEnabled = settings.telegramAlertsEnabled !== false;
+
+    if (hasTelegramConfig && isAlertsEnabled) {
       const reportHtml = formatBackupTelegramReport({
         success: false,
         isAutomated,
@@ -123,7 +139,20 @@ export async function runBackupSync(options?: RunBackupSyncOptions): Promise<Syn
         durationMs: Date.now() - startTime,
       });
 
-      sendTelegramNotification(reportHtml).catch(() => {});
+      try {
+        console.log("[Backuply] 📱 Invio notifica di ERRORE a Telegram in corso...");
+        const tgRes = await sendTelegramNotification(reportHtml, {
+          botToken: settings.telegramBotToken,
+          chatId: settings.telegramChatId,
+        });
+        if (tgRes.ok) {
+          console.log("[Backuply] ✅ Notifica Telegram di errore inviata!");
+        } else {
+          console.error("[Backuply] ❌ Errore API Telegram (errore backup):", tgRes.error);
+        }
+      } catch (tgErr: any) {
+        console.error("[Backuply] ❌ Eccezione durante invio errore a Telegram:", tgErr.message || tgErr);
+      }
     }
 
     return {

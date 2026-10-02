@@ -19,7 +19,7 @@ ENV NODE_ENV=production
 RUN npm run build
 
 FROM base AS runner
-RUN apk add --no-cache libc6-compat curl bash
+RUN apk add --no-cache libc6-compat curl bash tzdata
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
