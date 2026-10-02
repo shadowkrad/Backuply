@@ -15,12 +15,11 @@ services:
       - TAAAAC_CORE_URL=https://taaaac.eu
       - BACKUPLY_SECRET_TOKEN=taaaac-backuply-secure-token
       - BACKUPLY_STORAGE_PATH=/backups
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
-      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-8996782756:AAFX_ZghCcmWK6V-l3AvGtHSoVsZ5TTJ6j8}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-122043515}
       - TELEGRAM_ALERTS_ENABLED=${TELEGRAM_ALERTS_ENABLED:-true}
     volumes:
       # Dati applicativi e impostazioni di Backuply
       - ./data:/app/data
-      # Cartella archivio immutabile backup: di default cartella locale ./backups, 
-      # oppure mount point dello storage pool QNAP (es. /mnt/backups o /share/Backups)
-      - ./backups:/backups
+      # Cartella archivio immutabile backup sul NAS QNAP
+      - ${QNAP_BACKUP_PATH:-/mnt/qnap/Taaaac}:/backups

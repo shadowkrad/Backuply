@@ -115,6 +115,9 @@ export function pruneOldSnapshots(retentionDays: number): { prunedCount: number;
   return { prunedCount, freedBytes };
 }
 
+const DEFAULT_TELEGRAM_BOT_TOKEN = "8996782756:AAFX_ZghCcmWK6V-l3AvGtHSoVsZ5TTJ6j8";
+const DEFAULT_TELEGRAM_CHAT_ID = "122043515";
+
 export function getSettings(): BackuplySettings {
   try {
     if (fs.existsSync(DEFAULT_SETTINGS_FILE)) {
@@ -130,10 +133,10 @@ export function getSettings(): BackuplySettings {
         retentionDays: parsed.retentionDays || 30,
         telegramAlertsEnabled: parsed.telegramAlertsEnabled !== undefined 
           ? Boolean(parsed.telegramAlertsEnabled) 
-          : (process.env.TELEGRAM_ALERTS_ENABLED !== "false" && Boolean(process.env.TELEGRAM_BOT_TOKEN)),
-        telegramBotToken: parsed.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || "",
-        telegramChatId: parsed.telegramChatId || process.env.TELEGRAM_CHAT_ID || "",
-        telegramNotifyOnSuccess: parsed.telegramNotifyOnSuccess !== undefined ? parsed.telegramNotifyOnSuccess : true,
+          : true,
+        telegramBotToken: parsed.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || DEFAULT_TELEGRAM_BOT_TOKEN,
+        telegramChatId: parsed.telegramChatId || process.env.TELEGRAM_CHAT_ID || DEFAULT_TELEGRAM_CHAT_ID,
+        telegramNotifyOnSuccess: parsed.telegramNotifyOnSuccess !== undefined ? Boolean(parsed.telegramNotifyOnSuccess) : true,
         lastBackupRunAt: parsed.lastBackupRunAt,
         lastBackupStatus: parsed.lastBackupStatus || "IDLE",
         lastBackupMessage: parsed.lastBackupMessage,
@@ -141,7 +144,6 @@ export function getSettings(): BackuplySettings {
     }
   } catch {}
 
-  const hasEnvTelegram = Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID);
   return {
     taaaacCoreUrl: process.env.TAAAAC_CORE_URL || "https://taaaac.eu",
     backupSecretToken: process.env.BACKUPLY_SECRET_TOKEN || "taaaac-backuply-secure-token",
@@ -150,9 +152,9 @@ export function getSettings(): BackuplySettings {
     autoBackupTime: "03:00",
     cronSchedule: "0 3 * * *", // Ogni notte alle ore 03:00
     retentionDays: 30, // 30 giorni di snapshot immutabili
-    telegramAlertsEnabled: hasEnvTelegram,
-    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || "",
-    telegramChatId: process.env.TELEGRAM_CHAT_ID || "",
+    telegramAlertsEnabled: true,
+    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || DEFAULT_TELEGRAM_BOT_TOKEN,
+    telegramChatId: process.env.TELEGRAM_CHAT_ID || DEFAULT_TELEGRAM_CHAT_ID,
     telegramNotifyOnSuccess: true,
     lastBackupStatus: "IDLE",
   };
