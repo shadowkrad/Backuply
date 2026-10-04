@@ -5,6 +5,11 @@ export interface TelegramSendOptions {
   chatId?: string;
 }
 
+const globalForTelegram = globalThis as unknown as {
+  __backuply_last_telegram_hash?: string;
+  __backuply_last_telegram_ts?: number;
+};
+
 export async function sendTelegramNotification(
   messageHtml: string,
   options?: TelegramSendOptions
@@ -17,6 +22,25 @@ export async function sendTelegramNotification(
     if (!token || !chat) {
       return { ok: false, error: "Bot Token o Chat ID Telegram non configurati" };
     }
+
+    // Anti-duplicazione: controlla se una notifica equivalente è stata inviata negli ultimi 3 minuti (180s)
+    // Normalizziamo rimuovendo timestamp/secondi per verificare se è lo stesso report
+    const normalizedKey = messageHtml
+      .replace(/<code>\d{2}\/\d{2}\/\d{4}[^<]*<\/code>/g, "")
+      .replace(/⏱️ <b>Durata:<\/b> [^ \n]+/g, "")
+      .trim();
+
+    const now = Date.now();
+    const lastSentAt = globalForTelegram.__backuply_last_telegram_ts || 0;
+    const lastHash = globalForTelegram.__backuply_last_telegram_hash || "";
+
+    if (now - lastSentAt < 180000 && lastHash === normalizedKey) {
+      console.warn("[Backuply Telegram] ⚠️ Rilevata notifica duplicata inviata meno di 3 minuti fa. Invio soppresso per evitare messaggi doppi.");
+      return { ok: true };
+    }
+
+    globalForTelegram.__backuply_last_telegram_hash = normalizedKey;
+    globalForTelegram.__backuply_last_telegram_ts = now;
 
     const url = `https://api.telegram.org/bot${token.trim()}/sendMessage`;
 

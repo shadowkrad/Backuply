@@ -1,9 +1,11 @@
 import { getSettings } from "./storage";
 import { runBackupSync } from "./sync-service";
 
-let schedulerInterval: NodeJS.Timeout | null = null;
-let lastExecutedDate: string | null = null;
-let isJobRunning = false;
+const globalForBackuply = globalThis as unknown as {
+  __backuply_scheduler_interval?: NodeJS.Timeout | null;
+  __backuply_last_executed_date?: string | null;
+  __backuply_is_running?: boolean;
+};
 
 export function getLocalItalyTime(date = new Date()): { timeStr: string; dateStr: string } {
   const timeZone = process.env.TZ || "Europe/Rome";
@@ -34,15 +36,15 @@ export function getLocalItalyTime(date = new Date()): { timeStr: string; dateStr
 }
 
 export function startBackupScheduler(): void {
-  if (schedulerInterval) {
-    return; // Già attivo
+  if (globalForBackuply.__backuply_scheduler_interval) {
+    return; // Già attivo nel runtime di processo
   }
 
   console.log("[Backuply Scheduler] Inizializzazione motore di schedulazione automatico...");
 
   // Controllo ogni 45 secondi
-  schedulerInterval = setInterval(async () => {
-    if (isJobRunning) return;
+  const interval = setInterval(async () => {
+    if (globalForBackuply.__backuply_is_running) return;
 
     try {
       const settings = getSettings();
@@ -51,9 +53,20 @@ export function startBackupScheduler(): void {
       const targetTime = (settings.autoBackupTime || "03:00").trim();
       const { timeStr, dateStr } = getLocalItalyTime();
 
-      if (timeStr === targetTime && lastExecutedDate !== dateStr) {
-        lastExecutedDate = dateStr;
-        isJobRunning = true;
+      // Verifica se oggi è già stato eseguito con successo un backup automatico
+      if (settings.lastBackupRunAt && settings.lastBackupStatus === "SUCCESS") {
+        try {
+          const lastRunDate = new Date(settings.lastBackupRunAt);
+          const { dateStr: lastRunDateStr } = getLocalItalyTime(lastRunDate);
+          if (lastRunDateStr === dateStr) {
+            globalForBackuply.__backuply_last_executed_date = dateStr;
+          }
+        } catch {}
+      }
+
+      if (timeStr === targetTime && globalForBackuply.__backuply_last_executed_date !== dateStr) {
+        globalForBackuply.__backuply_last_executed_date = dateStr;
+        globalForBackuply.__backuply_is_running = true;
         console.log(`[Backuply Scheduler] ⏰ Orario target ${targetTime} raggiunto (oggi ${dateStr}). Avvio backup automatico...`);
 
         try {
@@ -62,18 +75,20 @@ export function startBackupScheduler(): void {
         } catch (err: any) {
           console.error("[Backuply Scheduler] ❌ Errore durante l'esecuzione del backup automatico:", err);
         } finally {
-          isJobRunning = false;
+          globalForBackuply.__backuply_is_running = false;
         }
       }
     } catch (loopErr) {
       console.error("[Backuply Scheduler] Errore loop scheduler:", loopErr);
-      isJobRunning = false;
+      globalForBackuply.__backuply_is_running = false;
     }
   }, 45000);
 
+  globalForBackuply.__backuply_scheduler_interval = interval;
+
   // Evita che il timer blocchi l'uscita del processo
-  if (schedulerInterval && typeof schedulerInterval.unref === "function") {
-    schedulerInterval.unref();
+  if (interval && typeof interval.unref === "function") {
+    interval.unref();
   }
 }
 
@@ -89,11 +104,11 @@ export function getSchedulerStatus(): {
   const settings = getSettings();
 
   return {
-    isActive: Boolean(schedulerInterval) && settings.autoBackupEnabled,
-    isJobRunning,
+    isActive: Boolean(globalForBackuply.__backuply_scheduler_interval) && settings.autoBackupEnabled,
+    isJobRunning: Boolean(globalForBackuply.__backuply_is_running),
     targetTime: settings.autoBackupTime || "03:00",
     currentTime: timeStr,
     currentDate: dateStr,
-    lastExecutedDate,
+    lastExecutedDate: globalForBackuply.__backuply_last_executed_date || null,
   };
 }

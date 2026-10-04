@@ -8,10 +8,38 @@ export interface RunBackupSyncOptions {
   isAutomated?: boolean;
 }
 
+const globalForSync = globalThis as unknown as {
+  __backuply_sync_in_progress?: boolean;
+  __backuply_last_sync_ts?: number;
+  __backuply_last_sync_result?: SyncResult;
+};
+
 export async function runBackupSync(options?: RunBackupSyncOptions): Promise<SyncResult> {
   const startTime = Date.now();
   const targetSubdomain = options?.subdomain;
   const isAutomated = Boolean(options?.isAutomated);
+
+  // Se è già in corso un backup, evitiamo sovrapposizioni e doppie esecuzioni
+  if (globalForSync.__backuply_sync_in_progress) {
+    console.warn("[Backuply Sync] ⚠️ Un backup è già attualmente in corso. Ritorno stato attuale senza duplicare il processo.");
+    return {
+      ok: true,
+      message: "Un processo di sincronizzazione backup è già in corso.",
+      downloadedCount: 0,
+      totalBytes: 0,
+      snapshots: getLocalSnapshots(),
+      errors: [],
+    };
+  }
+
+  // Se un backup automatico identico è appena stato eseguito da meno di 60 secondi (es. trigger concorrente cron + scheduler interno)
+  const lastSyncAge = Date.now() - (globalForSync.__backuply_last_sync_ts || 0);
+  if (isAutomated && lastSyncAge < 60000 && globalForSync.__backuply_last_sync_result) {
+    console.log("[Backuply Sync] ℹ️ Backup completato meno di 60 secondi fa. Riutilizzo esito per evitare duplicazioni.");
+    return globalForSync.__backuply_last_sync_result;
+  }
+
+  globalForSync.__backuply_sync_in_progress = true;
 
   const downloadedFiles: string[] = [];
   const errors: string[] = [];
@@ -106,7 +134,7 @@ export async function runBackupSync(options?: RunBackupSyncOptions): Promise<Syn
       console.log(`[Backuply] Notifica Telegram non inviata (hasConfig=${hasTelegramConfig}, isAlertsEnabled=${isAlertsEnabled}, shouldNotify=${shouldNotify})`);
     }
 
-    return {
+    const resultPayload: SyncResult = {
       ok: finalOk,
       message: summaryMessage,
       downloadedCount: downloadedFiles.length,
@@ -114,6 +142,11 @@ export async function runBackupSync(options?: RunBackupSyncOptions): Promise<Syn
       snapshots: currentSnapshots,
       errors,
     };
+
+    globalForSync.__backuply_last_sync_ts = Date.now();
+    globalForSync.__backuply_last_sync_result = resultPayload;
+
+    return resultPayload;
   } catch (error: any) {
     const errorMsg = error.message || "Errore imprevisto durante il backup";
     console.error("[Backuply] Errore sincronizzazione:", error);
@@ -155,7 +188,7 @@ export async function runBackupSync(options?: RunBackupSyncOptions): Promise<Syn
       }
     }
 
-    return {
+    const errPayload: SyncResult = {
       ok: false,
       message: errorMsg,
       downloadedCount: downloadedFiles.length,
@@ -163,5 +196,12 @@ export async function runBackupSync(options?: RunBackupSyncOptions): Promise<Syn
       snapshots: getLocalSnapshots(),
       errors: [...errors, errorMsg],
     };
+
+    globalForSync.__backuply_last_sync_ts = Date.now();
+    globalForSync.__backuply_last_sync_result = errPayload;
+
+    return errPayload;
+  } finally {
+    globalForSync.__backuply_sync_in_progress = false;
   }
 }
