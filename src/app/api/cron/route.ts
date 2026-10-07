@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runBackupSync } from "@/lib/sync-service";
 import { getSettings } from "@/lib/storage";
-import { getSchedulerStatus, startBackupScheduler } from "@/lib/scheduler";
+import { getSchedulerStatus } from "@/lib/scheduler";
 
 export async function GET(req: NextRequest) {
-  // Avvia lo scheduler in background se non ancora attivo
-  startBackupScheduler();
 
   const { searchParams } = new URL(req.url);
   const trigger = searchParams.get("trigger");

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSettings, saveSettings } from "@/lib/storage";
-import { startBackupScheduler, getSchedulerStatus } from "@/lib/scheduler";
+import { getSchedulerStatus } from "@/lib/scheduler";
 
 export async function GET() {
   try {
-    startBackupScheduler();
     const settings = getSettings();
     return NextResponse.json({
       ok: true,
@@ -20,7 +19,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const updated = saveSettings(body);
-    startBackupScheduler();
     return NextResponse.json({
       ok: true,
       message: "Impostazioni aggiornate con successo",
