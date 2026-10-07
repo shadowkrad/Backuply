@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { downloadTenantBackup, fetchRemoteTenants } from "./taaaac-client";
 import { getLocalSnapshots, getSettings, saveSettings, pruneOldSnapshots } from "./storage";
 import { formatBackupTelegramReport, sendTelegramNotification } from "./telegram";
@@ -6,6 +8,48 @@ import { SyncResult } from "./types";
 export interface RunBackupSyncOptions {
   subdomain?: string;
   isAutomated?: boolean;
+}
+
+const LOCK_FILE = path.join(process.cwd(), "data", ".backup.lock");
+
+function tryAcquireLock(): boolean {
+  try {
+    const dataDir = path.dirname(LOCK_FILE);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+
+    if (fs.existsSync(LOCK_FILE)) {
+      try {
+        const stats = fs.statSync(LOCK_FILE);
+        const ageMs = Date.now() - stats.mtimeMs;
+        // Se il lock ha più di 10 minuti, è orfano (es. crash processo precedente)
+        if (ageMs > 10 * 60 * 1000) {
+          console.warn("[Backuply Sync] ⚠️ Lock file obsoleto (> 10m). Rimozione forzata...");
+          fs.unlinkSync(LOCK_FILE);
+        } else {
+          return false;
+        }
+      } catch {
+        return false;
+      }
+    }
+
+    const fd = fs.openSync(LOCK_FILE, "wx");
+    fs.writeSync(fd, JSON.stringify({ pid: process.pid, time: new Date().toISOString() }));
+    fs.closeSync(fd);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function releaseLock(): void {
+  try {
+    if (fs.existsSync(LOCK_FILE)) {
+      fs.unlinkSync(LOCK_FILE);
+    }
+  } catch {}
 }
 
 const globalForSync = globalThis as unknown as {
@@ -19,9 +63,9 @@ export async function runBackupSync(options?: RunBackupSyncOptions): Promise<Syn
   const targetSubdomain = options?.subdomain;
   const isAutomated = Boolean(options?.isAutomated);
 
-  // Se è già in corso un backup, evitiamo sovrapposizioni e doppie esecuzioni
-  if (globalForSync.__backuply_sync_in_progress) {
-    console.warn("[Backuply Sync] ⚠️ Un backup è già attualmente in corso. Ritorno stato attuale senza duplicare il processo.");
+  // Controllo concorrenza cross-process ed in-memory: solo un backup attivo alla volta
+  if (globalForSync.__backuply_sync_in_progress || !tryAcquireLock()) {
+    console.warn("[Backuply Sync] ⚠️ Un backup è già attualmente in corso (lock rilevato). Ritorno stato attuale senza duplicare il processo.");
     return {
       ok: true,
       message: "Un processo di sincronizzazione backup è già in corso.",
@@ -32,10 +76,11 @@ export async function runBackupSync(options?: RunBackupSyncOptions): Promise<Syn
     };
   }
 
-  // Se un backup automatico identico è appena stato eseguito da meno di 60 secondi (es. trigger concorrente cron + scheduler interno)
+  // Se un backup automatico identico è appena stato eseguito da meno di 90 secondi (es. trigger concorrente cron + scheduler interno)
   const lastSyncAge = Date.now() - (globalForSync.__backuply_last_sync_ts || 0);
-  if (isAutomated && lastSyncAge < 60000 && globalForSync.__backuply_last_sync_result) {
-    console.log("[Backuply Sync] ℹ️ Backup completato meno di 60 secondi fa. Riutilizzo esito per evitare duplicazioni.");
+  if (isAutomated && lastSyncAge < 90000 && globalForSync.__backuply_last_sync_result) {
+    console.log("[Backuply Sync] ℹ️ Backup completato meno di 90 secondi fa. Riutilizzo esito per evitare duplicazioni e doppie notifiche.");
+    releaseLock();
     return globalForSync.__backuply_last_sync_result;
   }
 
@@ -203,5 +248,6 @@ export async function runBackupSync(options?: RunBackupSyncOptions): Promise<Syn
     return errPayload;
   } finally {
     globalForSync.__backuply_sync_in_progress = false;
+    releaseLock();
   }
 }

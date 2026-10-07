@@ -53,8 +53,8 @@ export function startBackupScheduler(): void {
       const targetTime = (settings.autoBackupTime || "03:00").trim();
       const { timeStr, dateStr } = getLocalItalyTime();
 
-      // Verifica se oggi è già stato eseguito con successo un backup automatico
-      if (settings.lastBackupRunAt && settings.lastBackupStatus === "SUCCESS") {
+      // Verifica se oggi è già stato eseguito un backup automatico
+      if (settings.lastBackupRunAt) {
         try {
           const lastRunDate = new Date(settings.lastBackupRunAt);
           const { dateStr: lastRunDateStr } = getLocalItalyTime(lastRunDate);
