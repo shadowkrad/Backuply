@@ -115,8 +115,8 @@ export function pruneOldSnapshots(retentionDays: number): { prunedCount: number;
   return { prunedCount, freedBytes };
 }
 
-const DEFAULT_TELEGRAM_BOT_TOKEN = "8996782756:AAFX_ZghCcmWK6V-l3AvGtHSoVsZ5TTJ6j8";
-const DEFAULT_TELEGRAM_CHAT_ID = "122043515";
+const DEFAULT_TELEGRAM_BOT_TOKEN = "";
+const DEFAULT_TELEGRAM_CHAT_ID = "";
 
 export function getSettings(): BackuplySettings {
   try {
