@@ -187,6 +187,8 @@ export default function BackuplyDashboard() {
         return "bg-amber-500/10 text-amber-400 border-amber-500/30";
       case "tavoly":
         return "bg-rose-500/10 text-rose-400 border-rose-500/30";
+      case "showly":
+        return "bg-amber-400/10 text-amber-300 border-amber-400/30";
       case "taskly":
         return "bg-indigo-500/10 text-indigo-400 border-indigo-500/30";
       default:

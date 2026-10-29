@@ -1,4 +1,4 @@
-export type TenantModuleType = "core" | "vendoly" | "schedly" | "barberly" | "tavoly" | "taskly";
+export type TenantModuleType = "core" | "vendoly" | "schedly" | "barberly" | "tavoly" | "taskly" | "showly";
 
 export interface BackupSnapshot {
   id: string;
